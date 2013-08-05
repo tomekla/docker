@@ -13,6 +13,8 @@ Vagrant::Config.run do |config|
   config.vm.box = BOX_NAME
   config.vm.box_url = BOX_URI
   config.vm.forward_port 4243, 4243
+  config.vm.network :hostonly, "10.11.12.13"
+  #config.vm.network :bridged, :bridge => "en0: Wi-Fi (AirPort)"
 
   # Provision docker and new kernel if deployment was not done
   if Dir.glob("#{File.dirname(__FILE__)}/.vagrant/machines/default/*/id").empty?
@@ -35,6 +37,8 @@ Vagrant::Config.run do |config|
         "echo yes | /mnt/VBoxLinuxAdditions.run\numount /mnt\n" \
           "rm /root/guest_additions.sh; ' > /root/guest_additions.sh; " \
         "chmod 700 /root/guest_additions.sh; " \
+        "apt-get install -y git; cd /home/vagrant/; git clone https://github.com/rogaha/dotfiles.git ; " \
+        "cd dotfiles; ./update_env.sh; " \
         "sed -i -E 's#^exit 0#[ -x /root/guest_additions.sh ] \\&\\& /root/guest_additions.sh#' /etc/rc.local; " \
         "echo 'Installation of VBox Guest Additions is proceeding in the background.'; " \
         "echo '\"vagrant reload\" can be used in about 2 minutes to activate the new guest additions.'; "
@@ -49,7 +53,8 @@ end
 # Providers were added on Vagrant >= 1.1.0
 Vagrant::VERSION >= "1.1.0" and Vagrant.configure("2") do |config|
   config.vm.provider :aws do |aws, override|
-    aws.access_key_id = ENV["AWS_ACCESS_KEY_ID"]
+  #config.vm.network :public_network
+  aws.access_key_id = ENV["AWS_ACCESS_KEY_ID"]
     aws.secret_access_key = ENV["AWS_SECRET_ACCESS_KEY"]
     aws.keypair_name = ENV["AWS_KEYPAIR_NAME"]
     override.ssh.private_key_path = ENV["AWS_SSH_PRIVKEY"]
